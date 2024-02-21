@@ -1,66 +1,47 @@
-int pinEN = 8;
-int dirPinX = 2;
-int stepPinX = 5;
+#include <FastLED.h>
 
-int stepsPerRevolution = 200;  // 1/1 
-// int stepsPerRevolution = 400;  // 1/2  
-//int stepsPerRevolution = 1600; // 1/8 
-// int stepsPerRevolution = 3200;   // 1/16 
 
-int dataSerial = 0;
-int nilai = 0;
-int nilaiDelay = 500;
+#define DATA_PIN A0
+#define LED_TYPE WS2812B
+#define COLOR_ORDER GRB
+#define NUM_LEDS 72
+
+CRGB leds[NUM_LEDS];
 
 void setup() {
+  FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
+  FastLED.setBrightness(100);
   Serial.begin(9600);
-  pinMode(stepPinX, OUTPUT);
-  pinMode(dirPinX, OUTPUT);
-  pinMode(pinEN, OUTPUT);
 }
 
-void loop()
-{
-  if (Serial.available() != 0)
-  {
-    digitalWrite(pinEN, LOW);       //Aktifkan driver
-    dataSerial = Serial.parseInt();
-    nilai = map(dataSerial, 0, 360, 0, stepsPerRevolution);
-
-    Serial.print("Dari Serial:");
-    Serial.print(dataSerial);
-    Serial.print("   Step:");
-    Serial.println(nilai);
-  }
-
-  //if value +, turn right
-  if (dataSerial > 0)
-  {
-    digitalWrite(dirPinX, LOW);
-
-    for (int i = 0; i < nilai; i++)
-    {
-      digitalWrite(stepPinX, HIGH);
-      delayMicroseconds(nilaiDelay);
-      digitalWrite(stepPinX, LOW);
-      delayMicroseconds(nilaiDelay);
-    }
-
-  }
-
-  //If value -, turn left
-  if (dataSerial < 0)
-  {
-    digitalWrite(dirPinX, HIGH);
-
-    for (int i = 0; i > nilai; i--)
-    {
-      digitalWrite(stepPinX, HIGH);
-      delayMicroseconds(nilaiDelay);
-      digitalWrite(stepPinX, LOW);
-      delayMicroseconds(nilaiDelay);
+void loop() {
+  // Вращение светодиодами синего цвета
+  for (int cnt=0; cnt < 5; cnt++){
+    for (int i = 1; i < NUM_LEDS - 2; i++) {
+      fill_solid(leds, NUM_LEDS, CRGB::White);
+      leds[i-1] = CRGB::BLUE;  // Оставим один светодиод белым для визуализации вращения
+      leds[i] = CRGB::White;
+      leds[i+1] = CRGB::White;
+      FastLED.show();
+      delay(50);
+      FastLED.clear();
     }
   }
 
-  delay(1000);
-  digitalWrite(pinEN, 0); //Turn off the driver, use this for testing only, to keep the stepper motor from overheating. 
+  // Мигание зеленым цветом три раза
+  for (int j = 0; j < 5; j++) {
+    fill_solid(leds, NUM_LEDS, CRGB::Red);
+    FastLED.show();
+    delay(500);
+    FastLED.clear();
+    FastLED.show();
+    delay(500);
+    FastLED.clear();
+  }
+
+  // Горение красным цветом
+  // fill_solid(leds, NUM_LEDS, CRGB::Green);
+  // FastLED.show();
+  fill_solid(leds, NUM_LEDS, CRGB::Red);
+  delay(10000);
 }
